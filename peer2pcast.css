@@ -1,0 +1,141 @@
+iframe { padding: 0; margin: 0; border: 0;}
+.draggable {background-color: #ccc;  margin: 0; padding: 0;}
+ul.papers {
+  list-style-type: none}
+ul#dropdownmenu { list-style-type: none;}
+#moresessions {  position: absolute; top: 5pt; right: 26px; background-color: #393;  font-size: 12pt; width: 250px; vertical-align: top; margin: 0; padding: 0; z-index: 99; }
+#dropdownmenu { margin:0; padding 0; font-size: 10pt;}
+ ul {margin-left: 2pt; padding-left: 0.5em; }
+a.session:link, a.session:visited { color: #ff9; text-decoration: none; font-family: 'Istok Web', sans-serif; font-size: 10pt;
+}
+a.session:hover { color: white; }
+
+#citation-container {  position:absolute; top: 590px; left: 10px; padding-right: 3px;}
+#citation-container li {  font-family: 'Istok Web', sans-serif;  }
+#videoplayer {position:absolute; top: 230px; left: 10px; }
+video { background-color: #333; }
+#viewer { position: absolute; top: 820px; left: 460px;}
+iframe { display: none; }
+#image-container { position: absolute; top: 390px; left: 460px;}
+.content { width: 400px; padding-bottom: 4px;}
+#timeline-content { width: 848px; }
+.pdf {color: brown;}
+.authorlist { cursor: pointer; color: green;  font-size: 9pt; display: inline; list-style-type: none; padding-right: 20px; }
+.draggable { background: transparent; }
+.title { padding-left: 15px;}
+h1 {font-size: 10pt; }
+.papertitle { cursor: pointer; text-decoration: underline;  font-family: 'Istok Web', sans-serif; font-size: 10pt;}
+#controls { position: absolute; top: 0; right: 0; border: 1px solid black; padding: 5px; }
+#comment {position:absolute; top: 230px; left: 460px; }
+.content {border: 1px solid black; } 
+
+#timeline { position: absolute; top: 130px; left: 10px;  width: 850px; }
+.timeline { position: relative; width: 848px; height: 17px; margin: 3px 0 3px 0; background-color: white; }
+#infovis { width: 400px; height: 400px; background-color: #333; }
+#inner-details { display: none; }
+#position { height: 5px; margin: 0; padding: 0; font-size: 8pt; position: relative; left: 55px;}
+.timeEvent { position: absolute; top: 0; height: 17px; }
+.timeEvent:hover {cursor: pointer; }
+video { width: 400px; height: 300px; }
+.tltitle {font-size: 7pt; font-weight: bold; font-family: sans-serif; padding: 0; margin: 0;}
+#knob {position: absolute; left: 0;}
+#title a { font-size: 9pt;}
+#headerblock { background-color: #006; width: 100%; padding: 0; 
+    margin: 0; 
+}
+
+#curspeaker { background-color: #333; color: white;  font-family: 'Istok Web', sans-serif;  width: 100%}
+
+
+#titleblock {
+    position: relative; 
+
+    }
+
+#uname a:link, #uname a:visited { color: #fff; text-decoration: none;}
+    
+#title{
+    background-color: #006;
+   color: #ff9; 
+    font-family: 'Francois One', sans-serif;
+    font-size: 48pt; 
+    bottom: 0; left: 7px;
+    width: 600px;
+    height: 75px;
+    position: relative;
+    text-decoration: none;
+}
+#titlenav {
+    color: white;
+    position: absolute;
+    right: 5px;
+    bottom: 0;
+    font-size: 12pt;
+    font-family: 'Istok Web', sans-serif;
+    }
+    
+#loginsmall, #loggedin {
+    color: white;
+    text-align: right;
+    position: absolute;
+    right: 5px;
+    top: 0;
+    font-size: 8pt;
+    font-family: 'Istok Web', sans-serif;
+    }
+    
+#loginbig {
+    color: white;
+    text-align: right;
+    position: absolute;
+    right: 5px;
+    top: 0;
+    font-size: 8pt;
+    font-family: 'Istok Web', sans-serif;
+
+    z-index: 999;
+    background-color: #006;    
+}
+
+#uname { border-bottom: 1px dotted #ccf;}
+
+
+#loginbig, #loggedin { display: none; }
+
+#logout { cursor: pointer; }   
+#subhead { 
+    position: relative;
+    font-size: 14pt;
+    background-color: #393;
+    color: white;
+    padding-top: 2px;
+    font-family: 'Istok Web', sans-serif;
+    width: 100%;
+    height: 30px;
+    }
+    
+#streamtitle { font-size: 10pt; }
+
+a#streamtitle:link, a#streamtitle:visited, a.titlelink:link, a.titlelink:visited { color: white; text-decoration: none; } 
+
+.error { color: #f33 }
+
+.content { background-color: #dadada; } 
+
+body { background-color: #ccf; padding: 0; margin: 0;  }
+
+#about { margin: 30px 80px 0 80px; font-family: 'Istok Web', sans-serif; font-size: 15pt;}
+
+
+
+.module h3 { width: 100%; background-color: #99c; margin: 0; padding: 5px 0 0 0; font-family: sans-serif; font-size: 10pt; border-radius: 0.5em 0.5em 0 0; cursor: pointer;}
+
+#timesig { display: none; }
+.module { max-width: auto; box-shadow: 5px 5px 15px #999;}
+.slide { width: 400px; height: 300px; }
+video { width: 400px; height: 300px; }
+
+.node {    font-family: 'Istok Web', sans-serif;}
+.node:hover { background-color: rgba(30,30,30,.7); z-index: 1000; }
+#log {  font-family: 'Istok Web', sans-serif; color: #ccf; display:none;  }
+#resetpos { font-family: 'Istok Web', sans-serif; color: #ccf; font-size: 8pt; position: fixed; bottom: 0px; right: 0px; background-color: #99c; color: #333; cursor: pointer; padding-top: 3px; z-index: 1000; } 

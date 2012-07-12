@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Peer to PCAST</title>
+<script type="text/javascript" src="jquery-1.4.4.min.js"></script> 
+<script src="smartpaginator.js"></script>
+<script src="jquery.url.js"></script>
+<script src="popcorn.js"></script>
+<script src="popcorn.image.js"></script>
+<script src="popcorn.citations.js"></script>
+<script src="jquery.ui.core.js"></script>
+<script src="jquery.validate.min.js"></script>
+<script src="jquery.ui.widget.js"></script>
+<script src="jquery.ui.mouse.js"></script>
+<script src="jquery.ui.draggable.js"></script>
+<script src="jquery.tinysort.js"></script>
+<script src="jquery.cookie.js"></script>
+<script type="text/javascript" src="superfish/js/superfish.js"></script>
+<script type="text/javascript" src="superfish/js/hoverIntent.js"></script>
+<script type="text/javascript" src="superfish/js/supersubs.js"></script>
+<script type="text/javascript" src="superfish/js/jquery.bgiframe.min.js"></script>
+
+<script src="jquery.form.js"></script>
+<script type="text/javascript" src="login.js"></script>
+
+
+<link href='http://fonts.googleapis.com/css?family=Francois+One&v2' rel='stylesheet' type='text/css'>
+
+<link href='http://fonts.googleapis.com/css?family=Istok+Web&v2' rel='stylesheet' type='text/css'>
+
+<link rel="stylesheet" type="text/css" href="peer2pcast.css" />
+<link rel="stylesheet" type="text/css" href="smartpaginator.css" />
+<style type="text/css">
+body { font-family: Istok Web; }
+video { width: 750px; height: 425px; border: 1px solid #333;}
+.paper { position: relative; border: 1px solid black; margin-top: 5px; margin-bottom: 10px; margin-left: 25px; background-color: #9cf; width: 650px; }
+.title { font-size: 10pt; padding: 0; }
+.paper li { font-size: 10pt; display: inline; list-style-type: none; margin-right: 5px;} 
+.authors, .auths { font-size: 10pt; margin: 0; padding: 0; }
+#nav { margin-top: 55px; }
+.titleinput {  width: 75%; border: 1px solid black;}
+.authsinput { width: 75%; border: 1px solid black;}
+.heading { width: 170px;}
+.edits { position: absolute; bottom: 0; right: 0px;  background-color: #99c; color: white; font-size: 9pt; padding: 0 3px;  display: none; list-style-type: circle; margin: 0;}
+.edits li { text-decoration: underline; cursor: pointer; }
+.control { display: block; float: left; padding: 0, 8px;}
+.authsinput, .titleinput { display: none; }
+#new { width: 250px; }
+</style>
+<script type="text/javascript">
+
+
+papers = [];
+$(document).ready(function() {
+
+
+
+
+$('.toggler').click( function(){
+	$('#loginsmall').toggle();
+	$('#loginbig').toggle();
+	$('#loginResult').text("");
+		});
+
+$('#logout').click( function(){
+            $.cookie('username', null, { expires: 7, path: "/" });
+            $.cookie('name', null, { expires: 7, path: "/" });
+            $('#password').val("");
+            $('#loggedin').hide();
+            $('#loginbig').hide();
+            $('#loginsmall').show();
+                });
+
+	    
+	
+		
+if ($.cookie('username')){
+    if ( checkSession($.cookie('username')) ){    
+        //alert("yay");
+	$('#uname').text($.cookie('username'));
+        $('#loggedin').show();
+        $('#loginsmall').hide();
+    } else {
+        $.cookie('username', null);
+	$('#password').val("");
+        $('#loggedin').hide();
+        $('#loginbig').hide();
+        $('#loginsmall').show();
+    }
+}
+
+$.getJSON("redditpcasts.json", function(streams) {
+	
+        $.each(streams, function(i,m){
+        url = m.url;
+        spl = m.title.split(".");
+        var desc = "";
+        for (i = 0; i < spl.length - 2; i++){
+        desc = desc + spl[i];
+        }
+        thedate = spl[spl.length - 2].replace("Feburary", "February");
+        desc = jQuery.trim(desc);
+        thedate = jQuery.trim(thedate);
+        epoch = Date.parse(thedate);
+        
+        treddit = m.reddit;
+        tstream = m.stream;
+        var dateul = $('ul[id=' + epoch + ']');
+        
+        if (dateul.length == 0) {
+            dateul = $("<ul/>", { "id": epoch, "class": "sub", "style": "display: none; visibility: hidden;"}).appendTo(topli);
+            dateli = $("<li/>", {"id": thedate, "text": thedate }).appendTo('ul[id='+ epoch + ']');
+        }
+        
+	    sessionsul = $("<ul/>", { "class": "sub", "id": epoch}).prependTo('li[id=' + thedate + ']');
+	    sessionsli = $("<li/>").appendTo(sessionsul);
+	    $("<a/>", { "href": url, "text": desc, "class": "session"}).appendTo(sessionsli);
+        
+        
+        $("<option/>", {"value": tstream, "text": desc, "data-date": Date.parse(thedate), "data-reddit": reddit, "data-url": url, "class": "events"}).appendTo("#streamselect");
+        if (tstream === stream) {
+            reddit = treddit;
+	        $("<a/>", {"id": "streamtitle", "text": desc, "href": reddit}).appendTo("#streamname");
+            }
+
+	   });
+        $("option[value='" + stream + "']").attr("selected", "selected");
+});
+$.tinysort.defaults.order = "desc";
+$.tinysort.defaults.attr = "id";
+$("ul#sessionlist>li").tsort();
+var thevid = $("#video");
+
+$('select').change(function() {
+    
+    var stream = $('select').val();
+    window.location.href = $('select option:selected').attr("data-url");
+    
+
+});
+
+
+$("<div/>", { text: "Add a new paper", class: "new"}).appendTo("#profiles");
+
+$("#new").click(function(){
+
+var thisdiv = $("<section/>", { class: "paper", id: "new", css: "display: none"}).hide();
+    thisdiv.insertAfter("#new");
+	thisdiv.slideDown(200);
+
+    var titlegroup = $("<div/>").appendTo(thisdiv);
+	$("<span/>", { class: "heading", text: "Title: " }).appendTo(titlegroup);
+    var nontitle = $("<span/>", { class: "title" }).appendTo(titlegroup);
+	var titlein = $("<input/>", { class: "titleinput", type: "text", "name": "title", size: 40 }).appendTo(titlegroup);
+	
+	var authgroup = $("<div/>").appendTo(thisdiv);
+    $("<span/>", { class: "heading", text: "Authors: " }).appendTo(authgroup);
+
+	var auths = $("<span/>", { class: "auths"}).appendTo(authgroup);
+
+		var authin = $("<input/>", { class: "authsinput", type: "text", "name": "authors",  size: 40, title: "Separate names with semicolons" }).appendTo(authgroup);
+
+    $("<div/>", { text: "PDF Needed", class: "fpdf" }).appendTo(thisdiv);
+	titlein.toggle();
+	authin.toggle();
+    nontitle.toggle();
+    auths.toggle();
+	var edits = $("<ul/>", { class: "edits" }).appendTo(thisdiv);
+	$("<li/>", { text: "Submit New Paper", class: "control newpaper"}).appendTo(edits);
+	$("<li/>", { text: "Cancel", class: "control newcancel"}).appendTo(edits);
+    edits.toggle();	
+ 
+ $(".newpaper").click(function() {
+    console.log("weee");
+    var parentpaper = ($(this).parents(".paper"))
+    var formtitle = $(this).parents(".paper").find(".titleinput").val();
+    var formauth = $(this).parents(".paper").find(".authsinput").val();
+        $.ajax({
+        type: "POST",
+        url: "chprofile.php",
+        dataType: "json",
+        data: {"title": formtitle, "authors": formauth, "action": "new" },
+	// script call was *not* successful
+        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+            console.log("responseText: " + XMLHttpRequest.responseText 
+            + ", textStatus: " + textStatus 
+            + ", errorThrown: " + errorThrown);
+        }, // error 
+        // script call was successful 
+        // data contains the JSON values returned by the Perl script 
+        success: function(data){
+          if (data.error) { // script returned error
+            console.log(data.error);
+          } // if
+          else { 
+          console.log("success");
+          //update div to new shit and make a yay 
+            console.log(parentpaper);
+            parentpaper.find(".edits").toggle();
+            parentpaper.find(".titleinput").toggle();
+            parentpaper.find(".title").text(formtitle).toggle();
+            parentpaper.find(".auths").text(formauth).toggle();
+            parentpaper.find(".authsinput").toggle();
+            parentpaper.find(".title").text(formtitle);
+            parentpaper.find(".auths").text(formauths);
+ 
+	} //else
+        } // success
+      }); // ajax  
+});
+
+ $(".newcancel").click(function() {
+    console.log("weee");
+    var parentpaper = ($(this).parents(".paper"))
+    console.log(parentpaper);
+    parentpaper.slideUp(200, this.remove);
+    }); 
+    });
+
+
+$(".paper").click(function() {
+
+if ( $(this).find(".title").is(":visible")) {
+
+$(this).find(".edits").toggle();
+$(this).find(".titleinput").toggle();
+$(this).find(".title").toggle();
+$(this).find(".auths").toggle();
+$(this).find(".authsinput").toggle();
+}
+
+
+});
+
+
+var name = $.cookie('name').replace(" ","_");
+$.ajaxSetup({
+  "error":function() {   
+  $("<div/>", { text: "No profile data found for this account." }).appendTo("#profiles");
+  $("#new").toggle();
+}});
+
+
+$.getJSON('data/newcitations/' + name + '.json', function(data) {
+   $.each(data.papers, function(i,paper) {
+    //var paperdiv = $("<div/>", { id: i}).appendTo("#profile");
+    papers.push(paper);
+    //$("<span/>", { class: "title", text: paper.title, "data-pdfurl": paper.pdfurl  } ).appendTo(paperdiv);
+    
+  });
+
+//console.log(papers.length);
+$.each(papers, function (i, paper) {
+	var thisdiv = $("<section/>", { class: "paper", id: i  }).appendTo("#profiles");
+	var titlegroup = $("<div/>").appendTo(thisdiv);
+	$("<span/>", { class: "heading", text: "Title: " }).appendTo(titlegroup);
+    
+	$("<span/>", { class: "title", text: paper.title }).appendTo(titlegroup);
+	$("<input/>", { class: "titleinput", type: "text", "name": "title", value: paper.title, size: 40 }).appendTo(titlegroup);
+	var authgroup = $("<div/>").appendTo(thisdiv);
+	
+	$("<span/>", { class: "heading", text: "Authors: " }).appendTo(authgroup);
+	var auths = $("<span/>", { class: "auths", text: paper.authors.join('; ')}).appendTo(authgroup);
+	$("<input/>", { class: "authsinput", type: "text", "name": "authors", value: paper.authors.join('; '), size: 40, title: "Separate names with semicolons" }).appendTo(authgroup);
+	if (paper.pdfurl) {
+	$("<div/>", { text: "PDF Found", class: "fpdf" }).appendTo(thisdiv);
+	} else {
+	$("<div/>", { text: "PDF Needed", class: "fpdf" }).appendTo(thisdiv);
+	}
+	var edits = $("<ul/>", { class: "edits" }).appendTo(thisdiv);
+	$("<li/>", { text: "Remove Paper", class: "control remove"}).appendTo(edits);
+
+	$("<li/>", { text: "Submit Changes", class: "control submit"}).appendTo(edits);
+	$("<li/>", { text: "Cancel", class: "control cancel"}).appendTo(edits);
+	
+    });
+
+$(".paper").click(function() {
+
+if ( $(this).find(".title").is(":visible")) {
+
+$(this).find(".edits").toggle();
+$(this).find(".titleinput").toggle();
+$(this).find(".title").toggle();
+$(this).find(".auths").toggle();
+$(this).find(".authsinput").toggle();
+}
+
+
+});
+
+$(".submit").click(function() {
+    var parentpaper = ($(this).parents(".paper"))
+    var divid = ($(this).parents(".paper").attr('id'));
+    var origtitle = (papers[divid].title);
+    var origauths = (papers[divid].authors.join('; '));
+    var formtitle = $(this).parents(".paper").find(".titleinput").val();
+    var formauth = $(this).parents(".paper").find(".authsinput").val();
+    if ( formauth == origauths) {
+        //console.log("AUTHORS MATCH");
+	//formauth = "";
+        }
+    
+    if ( formtitle == origtitle) {
+        //console.log("title MATCH");
+	//title = "";
+        }
+    $.ajax({
+        type: "POST",
+        url: "chprofile.php",
+        dataType: "json",
+        data: {"origtitle": origtitle, "title": formtitle, "authors": formauth, "what": "WHAT"},
+	// script call was *not* successful
+        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+            console.log("responseText: " + XMLHttpRequest.responseText 
+            + ", textStatus: " + textStatus 
+            + ", errorThrown: " + errorThrown);
+        }, // error 
+        // script call was successful 
+        // data contains the JSON values returned by the Perl script 
+        success: function(data){
+          if (data.error) { // script returned error
+            console.log(data.error);
+          } // if
+          else { 
+          console.log("success");
+          //update div to new shit and make a yay 
+            console.log(parentpaper);
+            parentpaper.find(".edits").toggle();
+            parentpaper.find(".titleinput").toggle();
+            parentpaper.find(".title").text(formtitle).toggle();
+            parentpaper.find(".auths").text(formauth).toggle();
+            parentpaper.find(".authsinput").toggle();
+            
+            parentpaper.find(".title").text(formtitle);
+            parentpaper.find(".auths").text(formauths);
+ 
+	} //else
+        } // success
+      }); // ajax  
+
+
+
+});
+
+$(".cancel").click(function() {
+    console.log("canceling");
+    var parentpaper = ($(this).parents(".paper"));
+    var divid = ($(this).parents(".paper").attr('id'));
+    var origtitle = (papers[divid].title);
+    var origauths = (papers[divid].authors.join('; '));
+    var formtitle = $(this).parents(".paper").find(".titleinput").val("");
+    var formauth = $(this).parents(".paper").find(".authsinput").val("");
+
+    parentpaper.find(".edits").hide();
+    parentpaper.find(".titleinput").val(origtitle).hide();
+    parentpaper.find(".title").show();
+    parentpaper.find(".auths").show();
+    parentpaper.find(".authsinput").val(origauths).hide();
+    
+
+});
+
+
+$(".remove").click(function() {
+    console.log("removing paper");
+    var divid = ($(this).parents(".paper").attr('id'));
+    var origtitle = (papers[divid].title);
+    var parentpaper = ($(this).parents(".paper")) 
+    $.ajax({
+        type: "POST",
+        url: "chprofile.php",
+        dataType: "json",
+        data: {"origtitle": origtitle, "action": "remove"},
+	// script call was *not* successful
+        error: function(XMLHttpRequest, textStatus, errorThrown) { 
+            console.log("responseText: " + XMLHttpRequest.responseText 
+            + ", textStatus: " + textStatus 
+            + ", errorThrown: " + errorThrown);
+        }, // error 
+        // script call was successful 
+        // data contains the JSON values returned by the Perl script 
+        success: function(data){
+          if (data.error) { // script returned error
+            console.log(data.error);
+          } // if
+          else { 
+          console.log("success");
+          //remove div            
+            parentpaper.slideUp(200, this.remove);
+          
+ 
+	} //else
+        } // success
+      }); // ajax  
+
+
+
+});
+
+
+
+
+$('#nav').smartpaginator({ totalrecords: papers.length, recordsperpage: 5, datacontainer: 'profiles', dataelement: 'section', theme: 'black' });
+});
+
+});
+
+
+
+
+
+function checkSession(username) {
+$.ajax({
+  type: "POST",
+  url: "session.php",
+  dataType: "json",
+  data: {"username": username},
+  success: function(data){
+      if (data == "success") {
+        $('#uname').text(username);
+        $('#loggedin').show();
+        $('#loginsmall').hide();
+      } else {
+        $.cookie('username', null);
+	$('#password').val("");
+        $('#loggedin').hide();
+        $('#loginbig').hide();
+        $('#loginsmall').show();
+      }
+  }
+
+
+
+});
+
+}
+
+
+function setTimer(){
+	
+	$p = Popcorn("#video");
+	$('#timesig').val($p.currentTime());
+}
+
+
+
+function getPdf(url){
+	theurl = "http://docs.google.com/viewer?url=" + url + "&embedded=true";
+	$("#pdfviewer").attr('src', theurl);
+
+}
+
+function isEven(someNumber){
+return (someNumber%2 == 0) ? true : false;
+
+}
+
+
+</script>
+</head>
+<body>
+<div id="headerblock">
+<div id="titleblock">
+<div id="loginsmall">
+     <a class="titlelink toggler" href="#">Log in</a>
+</div>
+<div id="loggedin">
+Logged in as <span id="uname"></span>.  <a id="logout">Log out</a>
+</div>
+
+<div id="loginbig">
+<form id="loginForm" name="loginForm" method="post" action="">
+  <fieldset>
+    <legend class="toggler">Log in</legend>
+    <p>
+      <label for="username">Username</label>
+      <br />
+      <input type="text" id="username" name="username" class="text" size="20" />
+    </p>
+    <p>
+      <label for="password">Password</label>
+      <br />
+      <input type="password" id="password" name="password" class="text" size="20" />
+    </p>
+    <p>
+      <button type="submit" class="button positive">
+              Login
+      </button>
+    </p>
+  </fieldset>
+</form>
+<div id="loginResult" style="display:none;">
+</div>
+</div>
+
+<a id="title" href="http://metaviddemo01.ucsc.edu/dev2pcast/">Peer to PCAST</a>
+    <div id="titlenav">
+    <a href="about.html" class="titlelink">About this Project</a> &bull; <a class="titlelink" href="http://reddit.com/r/PCAST_Demo">Our SubReddit</a>
+    </div>
+</div>
+</div>
+<div id="subhead"><div id="moresessions">
+
+</div>
+</div>
+<div id="nav">
+</div>
+<div id="content">        
+
+<div id="profiles">
+
+
+</div>
+
+
+</div>
+
+</body>
+</html>
+
+
+

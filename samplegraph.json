@@ -1,0 +1,45 @@
+{
+   "graph" : [
+      {
+         "edges" : [
+            [
+               "M Dale",
+               "System demonstration: Metavid. org: a social website and open archive of congressional video"
+            ],
+            [
+               "A Stern",
+               "System demonstration: Metavid. org: a social website and open archive of congressional video"
+            ],
+            [
+               "M Deckert",
+               "System demonstration: Metavid. org: a social website and open archive of congressional video"
+            ],
+            [
+               "W Sack",
+               "System demonstration: Metavid. org: a social website and open archive of congressional video"
+            ],
+            [
+               "A Stern",
+               "Enabling peer review of expert testimony within government proceedings"
+            ],
+            [
+               "M Deckert",
+               "Enabling peer review of expert testimony within government proceedings"
+            ],
+            [
+               "W Sack",
+               "Enabling peer review of expert testimony within government proceedings"
+            ]
+         ],
+         "nodes" : {
+            "M Dale" : "author",
+            "System demonstration: Metavid. org: a social website and open archive of congressional video" : "title",
+            "W Sack" : "author",
+            "Enabling peer review of expert testimony within government proceedings" : "title",
+            "M Deckert" : "author",
+            "A Stern" : "author"
+         }
+      }
+   ]
+}
+

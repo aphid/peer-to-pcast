@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Peer to PCAST</title>
+<script type="text/javascript" src="jquery-1.4.4.min.js"></script> 
+<script src="jquery.url.js"></script>
+<script src="popcorn.js"></script>
+<script src="popcorn.image.js"></script>
+<script src="popcorn.citations.js"></script>
+<script src="jquery.tinysort.js"></script>
+<script src="jquery.cookie.js"></script>
+<script src="jquery.ae.image.resize.js"></script>
+<script src="jquery-ui-1.8.21.custom.min"></script>
+<script type="text/javascript" src="superfish/js/superfish.js"></script>
+<script type="text/javascript" src="superfish/js/hoverIntent.js"></script>
+<script type="text/javascript" src="superfish/js/supersubs.js"></script>
+<script type="text/javascript" src="superfish/js/jquery.bgiframe.min.js"></script>
+<script type="text/javascript" src="graph.js"></script>
+<script src="jquery.form.js"></script>
+<script type="text/javascript" src="login.js"></script>
+<script type="text/javascript" src="viz/jit-yc.js"></script>
+<link href='http://fonts.googleapis.com/css?family=Francois+One&v2' rel='stylesheet' type='text/css' />
+
+<link href='http://fonts.googleapis.com/css?family=Istok+Web&v2' rel='stylesheet' type='text/css' />
+
+<link rel="stylesheet" type="text/css" href="css/ui-lightness/jquery-ui-1.8.15.custom.css" />
+
+<link rel="stylesheet" type="text/css" href="peer2pcast.css" />
+<script type="text/javascript">
+
+var duration;
+var reddit;
+var stream;
+var dateevent;
+var tlwid = 850;
+$(function() {
+var a = 3;
+$(".module" ).draggable({handle: ".header", cancel: ".content", zIndex: 2700, containment: "document", start: function(event, ui) { $(this).parent().css("z-index", a++)}, stop: function(event,ui){
+	var poscook = $(this).attr('id') + 'pos';
+	var posl = $(this).offset().left;
+	var post = $(this).offset().top;
+	$.cookie(poscook, posl + "x" + post);
+	
+} });
+
+//$(".content" ).resizable();
+$("#comment > .content").resizable({"alsoResize": "#commentfield", stop: function(event,ui){
+	$.cookie('commentw', $("#comment > .content").width());
+	$.cookie('commenth', $("#comment > .content").height());
+}});
+$("#videoplayer > .content").resizable({"aspectRatio": true, "alsoResize": "video", stop: function(event,ui){
+        $.cookie('videoplayerw', $("#videoplayer > .content").width());
+	$.cookie('videoplayerh', $("#videoplayer > .content").height());
+}});
+$("#image-container > .content").resizable({"aspectRatio": true, "alsoResize": ".slide"});
+$("#viewer > .content").resizable({"alsoResize": "iframe, #infovis", resize: function(event, ui) {
+	//var htpct =  ui.size.height / ui.originalSize.height;
+	//var wdpct = ui.size.width / ui.originalSize.width;
+	Log.write("Was: " + ui.originalSize.width + "x" + ui.originalSize.height + " Now: " + ui.size.width + "x" + ui.size.height);	
+	if (ht.canvas) { ht.canvas.resize( ui.size.width, ui.size.height) };
+	},
+     stop: function(event, ui){
+        if (ht.canvas) {  ht.canvas.resize( ui.size.width, ui.size.height) }; 
+	$.cookie('viewerw', $("#viewer > .content").width());
+	$.cookie('viewerh', $("#viewer > .content").height());
+
+} });
+$("#citation-container > .content").resizable({stop: function(event,ui){
+	$.cookie('citation-containerw', $("#citation-container > .content").width());
+	$.cookie('citation-containerh', $("#citation-container > .content").height());
+
+}});
+
+$(".header").click(function() {
+	//$(this).parent().addClass('top').removeClass('bottom');
+	//$(this).siblings().removeClass('top').addClass('bottom');
+	$(this).parent().css("z-index", a++);		
+
+});
+
+});
+
+
+
+$(document).ready(function() {
+  
+
+$('.toggler').click( function(){
+	$('#loginsmall').toggle();
+	$('#loginbig').toggle();
+	$('#loginResult').text("");
+		});
+
+	    
+	
+$('#logout').click( function(){
+            $.cookie('username', null, { expires: 7, path: "/" });
+	    $.cookie('name', null, { expires: 7, path: "/" });
+	    $('#password').val("");
+	    $('#loggedin').hide();
+	    $('#loginbig').hide();
+	    $('#loginsmall').show();
+		});
+		
+if ($.cookie('username')){
+    if ( checkSession($.cookie('username')) ){    
+        $("<a/>", { text: username, href: "profile.html"}).appendTo("#uname");
+
+	//$('#uname').text($.cookie('username'));
+        $('#loggedin').show();
+        $('#loginsmall').hide();
+    } else {
+        $.cookie('username', null);
+	$('#password').val("");
+        $('#loggedin').hide();
+        $('#loginbig').hide();
+        $('#loginsmall').show();
+    }
+
+
+}
+
+
+
+
+tlwid = $("#timeline").width() - 72;
+
+topul = $("<ul/>", { "class": "sessionlist sf-menu", "id": "dropdownmenu"} ).appendTo("#moresessions");
+topli = $("<li/>", {  "text": "More Sessions", "class": "top_link" }).appendTo(topul);
+$("h3").attr({"title": "Double-click to shrink"});
+
+stream = $.url().param('stream');
+if (!stream) { stream = "100312_pcast_0845" }
+
+
+$.getJSON("redditpcasts.json", function(streams) {
+	
+        $.each(streams, function(i,m){
+        url = m.url;
+        spl = m.title.split(".");
+        var desc = "";
+        for (i = 0; i < spl.length - 2; i++){
+        desc = desc + spl[i];
+        }
+        thedate = spl[spl.length - 2].replace("Feburary", "February");
+        desc = jQuery.trim(desc);
+        thedate = jQuery.trim(thedate);
+        epoch = Date.parse(thedate);
+        
+        treddit = m.reddit;
+        tstream = m.stream;
+        var dateul = $('ul[id=' + epoch + ']');
+        
+        if (dateul.length == 0) {
+            dateul = $("<ul/>", { "id": epoch, "class": "sub", "style": "display: none; visibility: hidden;"}).appendTo(topli);
+            dateli = $("<li/>", {"id": thedate, "text": thedate }).appendTo('ul[id='+ epoch + ']');
+        }
+        
+	    sessionsul = $("<ul/>", { "class": "sub", "id": epoch}).prependTo('li[id=' + thedate + ']');
+	    sessionsli = $("<li/>").appendTo(sessionsul);
+	    $("<a/>", { "href": url, "text": desc, "class": "session"}).appendTo(sessionsli);
+        
+        
+        $("<option/>", {"value": tstream, "text": desc, "data-date": Date.parse(thedate), "data-reddit": reddit, "data-url": url, "class": "events"}).appendTo("#streamselect");
+        if (tstream === stream) {
+            reddit = treddit;
+	        $("<a/>", {"id": "streamtitle", "text": desc, "href": reddit}).appendTo("#streamname");
+            }
+
+	   });
+        $("option[value='" + stream + "']").attr("selected", "selected");
+});
+$.tinysort.defaults.order = "desc";
+$.tinysort.defaults.attr = "id";
+$("ul#sessionlist>li").tsort();
+var thevid = $("#video");
+
+$('select').change(function() {
+    
+    var stream = $('select').val();
+    window.location.href = $('select option:selected').attr("data-url");
+    
+
+});
+
+thevid.attr("autoplay", "autoplay");
+$("<source/>", {"src": "http://metaviddemo01.ucsc.edu/media/" + stream +".mp4", "type": "video/mp4", "codecs": "avc1.42E01E, mp4a.40.2"}).appendTo(thevid);
+$("<source/>", {"src": "http://metaviddemo01.ucsc.edu/media/" + stream +".webm", "type": "video/webm", "codecs": "vp8, vorbis"}).appendTo(thevid);
+$("<source/>", {"src": "http://metaviddemo01.ucsc.edu/media/" + stream +".ogv", "type": "video/ogg", "codecs": "theora, vorbis"}).appendTo(thevid);
+
+
+thevid.load();
+setUpVideo(stream);
+});
+
+function checkSession(username) {
+$.ajax({
+  type: "POST",
+  url: "http://metaviddemo01.ucsc.edu/dev2pcast/session.php",
+  dataType: "json",
+  data: {"username": username},
+  success: function(data){
+      if (data == "success") {
+        $("<a/>", { text: username, href: "profile.html"}).appendTo("#uname");
+	//$('#uname').text(username);
+        $('#loggedin').show();
+        $('#loginsmall').hide();
+      } else {
+        $.cookie('username', null);
+	$('#password').val("");
+        $('#loggedin').hide();
+        $('#loginbig').hide();
+        $('#loginsmall').show();
+      }
+  }
+});
+
+}
+
+
+
+
+function setUpVideo(stream) {
+    
+
+    $("#titlelink").attr("href", "http://metavid.org/wiki/Stream:" + stream);
+    $("option[value='" + stream + "']").attr("selected", "selected");
+    $("#titlelink").text($('select option:selected').html());
+	$('#video').bind('loadedmetadata', function() {
+		duration = Popcorn('#video').duration();
+		
+		var startTime = $.url().param('t');
+		if (startTime) { Popcorn('#video').currentTime(startTime); } 
+		fetchImages(stream);
+		fetchEvents(stream);
+		fetchMessages(stream);
+
+		$('h3').dblclick( function(){
+			$(this).next('div').toggle('slow');
+		});
+ 		$('#myForm').ajaxForm(function() { 
+            $('#commentfield').val("");
+		    alert("Thank you for your comment!");
+		    fetchMessages(stream);
+ 		});
+		$("<input/>", {"name": "stream", "type": "hidden", "value": stream}).appendTo("#myForm");
+		$("<input/>", {"name": "reddit", "type": "hidden", "value": reddit}).appendTo("#myForm");
+			
+
+ 		Popcorn("#video").listen('timeupdate', function(){
+        	tlUpdate(this.currentTime());
+        	});
+	});	
+
+}
+
+function setTimer(){
+	
+	$p = Popcorn("#video");
+	$('#timesig').val($p.currentTime());
+}
+
+function tlUpdate(sometime){
+    posx = tlwid / duration * sometime;
+    $("#knob").css({"left": posx});
+    $("#knob").attr("title", sometime);
+
+    }
+    
+function fetchMessages(stream) {
+    if ($(".tlcomment").length){
+    
+        $(".tlcomment").remove().delay(10000);
+    }
+    $.getJSON("getdiscuss.php?stream=" + stream, function(message) {
+        $.each(message, function(i, m){
+            body = m.body;
+            time = m.time;
+
+            var posleft = tlwid / duration * time;
+            var posw = (tlwid / duration * time + 5) - posleft;   
+            posleft = posleft + 55;
+            var colr = "brown";
+            var tl = $("<a/>", {"title": body, "class": "timeEvent tlcomment", "onClick" : "Popcorn('#video').currentTime(" + time + ")"}).css({"left": posleft, "width": posw, "background-color": colr }).appendTo("#msgtimeline");
+             });
+$("ul.sf-menu").superfish(); 
+$("ul.sub").tsort({ attr: "id"});  
+    });
+}
+
+function fetchImages(stream) {
+	var parturl = stream.split(/[_]+/);
+	var jsonurl = "data/vardumps/" + stream + ".vardump.json";
+	$.getJSON(jsonurl, function(data) {
+		if (!data.images) {
+		$("#image-container").remove();
+		$("#slidetimeline").remove();
+		//$("#viewer").css("top", "390px");
+		}
+		var duration = Popcorn("#video").duration();
+                $.each(data.images, function(i,image){
+			//mSg(i + " " + image);
+			if (isEven(i)) {
+                		var colr = "#99c";
+            		} else {
+                		var colr = "#ff9";
+            		}
+            		var slidenum = i + 1;
+			var parturl = stream.split(/[_]+/);
+            		var imgurl = "http://metaviddemo01.ucsc.edu/pcasts/" + parturl[0] + "/" + stream + "/slide" + (i + 1) + ".jpg";
+            		if (i == 0) { 
+                		slidestart = 0;
+                		posleft = 0;
+            		} else {
+                		slidestart = data.images[i-1];
+                		posleft = tlwid / duration * slidestart;
+            		}
+			if (data.images[i+1] < image) {
+            			slidestop = data.images[i+1] - 1;	
+			} else {
+				slidestop = image;
+			}
+            	posw = ((tlwid / duration) * slidestop) - posleft;
+            	Popcorn("#video").image({"id":i, "class": "slide", "start": slidestart, "end": slidestop, "target":"image-content", "src":imgurl});
+            	$("<a/>", {"title": "Slide " + slidenum, "class": "timeEvent", "onClick" : "Popcorn('#video').currentTime(" + slidestart + ")"}).css({"left": posleft + 55, "width": posw, "background-color": colr }).appendTo("#slidetimeline");
+            
+	});
+$("ul.sf-menu").superfish(); 
+$("ul.sub").tsort({ attr: "id"});
+
+	});
+}
+
+function fetchEvents(stream) {
+
+    $.getJSON("data/speakers/" + stream + ".speakers.json", function(data) {    
+
+      
+        $.each(data.events, function(i,event){
+		if (isEven(i)) {
+            var colr = "#ff9";
+        } else {
+            var colr = "#99c";
+        }
+		Popcorn("#video").citation({"id":"citation","start":event.start,"end":event.end,"target":"citation-content","name":event.speaker});
+		var posleft = tlwid / duration * event.start;
+		var posw = (tlwid / duration * event.end) - posleft;   
+        posleft = posleft + 55;
+		var fullname = event.speaker.replace("_", " ");
+		var tl = $("<a/>", {"title": fullname, "class": "timeEvent", "onClick" : "Popcorn('#video').currentTime(" + event.start + ")"}).css({"left": posleft, "width": posw, "background-color": colr }).appendTo("#speakertimeline");
+		//tl.css({position: relative, top: 0px, left: posleft, width: 300px})
+ 	});
+   });    
+}
+
+
+function getPdf(url){
+	theurl = "http://docs.google.com/viewer?url=" + url + "&embedded=true";
+	$("#pdfviewer").attr('src', theurl);
+	$("iframe").show();
+	$("#infovis").hide();
+
+}
+
+
+function isEven(someNumber){
+return (someNumber%2 == 0) ? true : false;
+}
+
+
+</script>
+</head>
+<body>
+<div id="headerblock">
+    <div id="titleblock">
+    <div id="loginsmall">
+        <a class="titlelink toggler" href="#">Commenting anonymously.  Log in</a>
+        </div>
+        <div id="loggedin">
+            Logged in as <span id="uname"></span>.  <a id="logout">Log out</a>
+        </div>
+        <div id="loginbig">
+            <form id="loginForm" name="loginForm" method="post" action="">
+            <fieldset>
+            <legend class="toggler">Log in</legend>
+            <p>
+            <label for="username">Username</label>
+            <br />
+            <input type="text" id="username" name="username" class="text" size="20" />
+            </p>
+            <p>
+            <label for="password">Password</label>
+            <br />
+            <input type="password" id="password" name="password" class="text" size="20" />
+            </p>
+            <p>
+            <button type="submit" class="button positive">
+                  Login
+            </button>
+            </p>
+            </fieldset>
+            </form>
+            <div id="loginResult" style="display:none;">
+            </div>
+    </div>
+
+<div><a id="title" href="http://metaviddemo01.ucsc.edu/dev2pcast/">Peer to PCAST</a></div>
+    <div id="titlenav">
+    <a href="about.html" class="titlelink">About this Project</a> &bull; <a class="titlelink" href="http://reddit.com/r/PCAST_Demo">Our SubReddit</a>
+    </div>
+</div>
+</div>
+<div id="subhead">
+<div id="streamname">This Session: </div><div id="moresessions">
+
+</div>
+</div>
+
+
+</div>
+
+
+
+<div id="selector">
+<select name="streams" id="streamselect" style="display: none; visibility: hidden;">
+</select></div>
+
+</div>
+
+<div id="moresessions">
+
+</div>
+
+<div id="videoplayer" class="module" data-defaulttop="230" data-defaultleft="10" data-defaultwidth="400">
+
+<h3 class="header">Video</h3>
+<div class="content" id="video-content">        
+<video controls="controls"  tabindex="0" id="video" webkit-playsinline>
+</video>
+</div></div>
+<div class="module"  id="image-container" data-defaulttop="390" data-defaultleft="460" data-defaultwidth="400"><h3 class="header">Slides</h3>
+<div class="content" id="image-content"></div>
+</div>
+
+<div class="module" id="citation-container" data-plugin="citation" class="butter-plugin" data-defaulttop="590" data-defaultleft="10">
+<h3 class="header">Research</h3>
+<div id="citation-content" class="content"></div>
+</div>
+<div class="module" id="viewer" data-defaulttop="820" data-defaultleft="460">
+	<h3 class="header">Viewer</h3>
+	<div id="viewer-content" class="content">
+	<iframe src="" id="pdfviewer" width="400" height="600"></iframe>
+	<div id="infovis"></div>
+	<div id="inner-details"></div>
+	<div id="log"></div>
+</div></div>
+<div id="comment" class="module" data-defaulttop="230" data-defaultleft="460">
+	<h3 class="header">Comment</h3>
+	<div class="content" id="comment-content">
+	<form id="myForm" action="http://metaviddemo01.ucsc.edu/dev2pcast/comment.php" method="post">
+	<textarea name="comment" rows="5" cols="40" id="commentfield" onFocus="setTimer();"></textarea>
+	<input id="timesig" type="text" name="timesig" />
+	<br/><input type="submit" value="Submit Comment" />
+	</form>
+	</div>
+</div>
+
+<div id="timeline" class="module" data-defaulttop="130" data-defaultleft="10">
+		<h3 class="header">Timeline</h3>
+	
+	<div class="content" id="timeline-content">
+	<div id="position"><span id="knob"> &bull; </span> </div>
+    <div class="timeline" id="slidetimeline"><span class="tltitle">Slides</span> </div>
+    <div class="timeline" id="speakertimeline"><span class="tltitle">Speakers</span></div>
+    <div class="timeline" id="msgtimeline"><span class="tltitle">Comments</span></div>
+	</div>
+</div>
+<div id="resetpos">
+<a onClick="resetPositioning();">Reset Positioning</a>
+</div>
+
+
+</body>
+</html>
+
+
+
